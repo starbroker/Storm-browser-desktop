@@ -37,8 +37,6 @@ jobs:
         name: installers-${{ matrix.os }}
         path: |
           release/*.exe
-          release/*.msix
-          release/*.appx
           release/*.dmg
           release/*.AppImage
           release/*.deb
