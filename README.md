@@ -1,11 +1,42 @@
-<div align="center">
+# Storm Browser
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+A fast, private, and secure browser built with React, TypeScript, and Tailwind CSS.
 
-  <h1>Built with AI Studio</h2>
+## Features
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+- **Speed Dial / Bookmarks**: Quick access to your favorite sites with customizable layouts (Grid/List).
+- **Tabbed Browsing**: Easily switch between multiple tabs.
+- **Privacy & Security**: Built-in ad blocker and tracker blocker to keep your browsing safe.
+- **Customization**: Personalize your browser with different themes (Dark/Light/System), accent colors, and typography choices.
+- **Built-in Search**: Integrated search using DuckDuckGo, Google, Bing, Yahoo, or custom search engines.
+- **Fluid Animations**: Smooth UI transitions and effects for a better user experience.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## Development Setup
 
-</div>
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+2. **Run the Development Server**
+   ```bash
+   npm run dev
+   ```
+
+3. **Build for Production**
+   ```bash
+   npm run build
+   ```
+
+## Tech Stack
+
+- React
+- TypeScript
+- Tailwind CSS
+- Vite
+- Lucide Icons
+- Framer Motion
+
+## License
+
+MIT

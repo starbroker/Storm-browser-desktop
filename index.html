@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Storm Browser</title>
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <script>
+      // Prevent AI Studio / Extension fetch override errors from crashing the app or showing Vite overlays
+      window.addEventListener('error', function(e) {
+        if (e.message && (e.message.includes('Cannot set property fetch') || e.message.includes('fetch'))) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+        }
+      }, true);
+
+      window.addEventListener('unhandledrejection', function(e) {
+        if (e.reason && e.reason.message && (e.reason.message.includes('Cannot set property fetch') || e.reason.message.includes('fetch'))) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+        }
+      }, true);
+      
+      try {
+        if (window.fetch) {
+          const f = window.fetch;
+          Object.defineProperty(window, 'fetch', {
+            value: f,
+            writable: true,
+            configurable: true,
+            enumerable: true
+          });
+        }
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

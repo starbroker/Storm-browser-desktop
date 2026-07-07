@@ -1,0 +1,6 @@
+{
+  "name": "Storm Browser",
+  "description": "A frosted glass UI prototype of the Storm Browser desktop application.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
