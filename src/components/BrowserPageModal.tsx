@@ -15,7 +15,9 @@ export function BrowserPageModal({
   passwords,
   setPasswords,
   handleBookmarkClick,
-  updateSetting
+  updateSetting,
+  installedExtensions,
+  setInstalledExtensions
 }: any) {
   const [isAddingBookmark, setIsAddingBookmark] = useState(false);
   const [newBookmarkData, setNewBookmarkData] = useState({ title: '', url: '' });
@@ -474,26 +476,41 @@ export function BrowserPageModal({
                   </button>
                 </div>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/20 text-blue-500">
-                        <Shield size={20} />
+                  {installedExtensions && installedExtensions.length > 0 ? (
+                    installedExtensions.map((ext: any) => (
+                      <div key={ext.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 p-4">
+                        <div className="flex items-center space-x-4">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-500/20 text-blue-500">
+                            <Shield size={20} />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium text-white">{ext.name}</span>
+                            <span className="text-xs text-white/50">Version {ext.version}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" className="sr-only peer" checked={settings.adBlocker} onChange={() => updateSetting('adBlocker', !settings.adBlocker)} />
+                            <div className="w-9 h-5 bg-white/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
+                          </label>
+                          <button 
+                            onClick={() => {
+                              if (setInstalledExtensions) {
+                                setInstalledExtensions((prev: any[]) => prev.filter(e => e.id !== ext.id));
+                              }
+                            }}
+                            className="rounded-lg p-2 opacity-50 hover:bg-white/10 hover:opacity-100 transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-white">AdBlock Plus</span>
-                        <span className="text-xs text-white/50">Version 3.14.2</span>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="py-12 text-center text-white/50">
+                      No extensions installed. Browse the Chrome Web Store to find extensions.
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" checked={settings.adBlocker} onChange={() => updateSetting('adBlocker', !settings.adBlocker)} />
-                        <div className="w-9 h-5 bg-white/10 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
-                      </label>
-                      <button className="rounded-lg p-2 opacity-50 hover:bg-white/10 hover:opacity-100 transition-colors">
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
             )}

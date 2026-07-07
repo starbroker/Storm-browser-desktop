@@ -1,39 +1,72 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Storm Browser</title>
-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <script>
-      // Prevent AI Studio / Extension fetch override errors from crashing the app or showing Vite overlays
-      window.addEventListener('error', function(e) {
-        if (e.message && (e.message.includes('Cannot set property fetch') || e.message.includes('fetch'))) {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-        }
-      }, true);
-
-      window.addEventListener('unhandledrejection', function(e) {
-        if (e.reason && e.reason.message && (e.reason.message.includes('Cannot set property fetch') || e.reason.message.includes('fetch'))) {
-          e.preventDefault();
-          e.stopImmediatePropagation();
-        }
-      }, true);
-      
+      // Fix fetch getter issue by providing a setter if it's missing, BEFORE extensions run.
+      // Wait, we are in index.html, extensions might run before us.
       try {
-        if (window.fetch) {
-          const f = window.fetch;
+        const desc = Object.getOwnPropertyDescriptor(window, 'fetch');
+        if (desc && desc.get && !desc.set) {
           Object.defineProperty(window, 'fetch', {
-            value: f,
-            writable: true,
+            get: desc.get,
+            set: function(v) {
+              Object.defineProperty(window, 'fetch', {
+                value: v,
+                writable: true,
+                configurable: true,
+                enumerable: true
+              });
+            },
             configurable: true,
             enumerable: true
           });
         }
-      } catch (e) {}
+      } catch(e) {}
     </script>
-  </head>
+
+    <script>
+      // Ultimate suppression of fetch extension errors
+      const origAddEventListener = window.addEventListener;
+      window.addEventListener = function(type, listener, options) {
+        if (type === 'error' || type === 'unhandledrejection') {
+          const wrapped = function(e) {
+            const msg = e.message || (e.reason && e.reason.message) || '';
+            if (msg.includes('Cannot set property fetch') || msg.includes('fetch')) {
+              e.preventDefault();
+              e.stopImmediatePropagation();
+              return;
+            }
+            return listener.apply(this, arguments);
+          };
+          return origAddEventListener.call(this, type, wrapped, options);
+        }
+        return origAddEventListener.call(this, type, listener, options);
+      };
+      
+      const origConsoleError = console.error;
+      console.error = function() {
+        if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('Cannot set property fetch') || arguments[0].includes('fetch'))) {
+          return;
+        }
+        if (arguments[0] && arguments[0].message && (arguments[0].message.includes('Cannot set property fetch') || arguments[0].message.includes('fetch'))) {
+          return;
+        }
+        return origConsoleError.apply(this, arguments);
+      };
+
+      window.onerror = function(msg) {
+        if (typeof msg === 'string' && msg.includes('fetch')) return true;
+      };
+    </script>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Storm Browser</title>
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    
+  
+    
+</head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

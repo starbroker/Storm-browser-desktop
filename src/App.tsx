@@ -162,9 +162,7 @@ export default function App() {
   const [translateDetect, setTranslateDetect] = useState(true);
   const [translateEnabled, setTranslateEnabled] = useState(false);
 
-  const [installedExtensions, setInstalledExtensions] = useState([
-    { id: 'adblock', name: 'AdBlock Plus', icon: 'Shield', active: settings.adBlocker, version: '3.14.2' }
-  ]);
+  const [installedExtensions, setInstalledExtensions] = useState<any[]>([]);
 
   const [newBookmarkData, setNewBookmarkData] = useState({ title: '', url: '' });
   
@@ -1116,25 +1114,35 @@ export default function App() {
                       </div>
                       
                       <div className="space-y-4">
-                        <div className={`flex items-center justify-between p-2 rounded-lg ${settings.themeMode === 'light' ? 'bg-gray-50' : 'bg-white/5'}`}>
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-500">
-                              <Shield size={16} />
+                        {installedExtensions.length > 0 ? (
+                          installedExtensions.map((ext) => (
+                            <div key={ext.id} className={`flex items-center justify-between p-2 rounded-lg ${settings.themeMode === 'light' ? 'bg-gray-50' : 'bg-white/5'}`}>
+                              <div className="flex items-center space-x-3">
+                                <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-500">
+                                  <Shield size={16} />
+                                </div>
+                                <div>
+                                  <p className={`text-sm font-medium ${settings.themeMode === 'light' ? 'text-gray-900' : 'text-white'}`}>{ext.name}</p>
+                                  <p className={`text-xs ${settings.themeMode === 'light' ? 'text-gray-500' : 'text-white/50'}`}>{ext.active ? 'Active' : 'Disabled'}</p>
+                                </div>
+                              </div>
+                              <div className="flex space-x-1">
+                                <button onClick={() => updateSetting('adBlocker', !settings.adBlocker)} className={`p-1.5 rounded-md hover:bg-black/5 ${settings.themeMode === 'light' ? 'text-gray-600' : 'text-white/70 hover:bg-white/10'}`} title="Toggle">
+                                  <SettingsIcon size={14} />
+                                </button>
+                                <button onClick={() => {
+                                  setInstalledExtensions(prev => prev.filter(e => e.id !== ext.id));
+                                }} className={`p-1.5 rounded-md text-blue-500 hover:bg-blue-500/10`} title="Remove">
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
                             </div>
-                            <div>
-                              <p className={`text-sm font-medium ${settings.themeMode === 'light' ? 'text-gray-900' : 'text-white'}`}>AdBlock Plus</p>
-   <p className={`text-xs ${settings.themeMode === 'light' ? 'text-gray-500' : 'text-white/50'}`}>{settings.adBlocker ? 'Active' : 'Disabled'}</p>
-                            </div>
+                          ))
+                        ) : (
+                          <div className={`text-center py-4 text-xs ${settings.themeMode === 'light' ? 'text-gray-500' : 'text-white/40'}`}>
+                            No extensions installed
                           </div>
-                          <div className="flex space-x-1">
-                            <button onClick={() => updateSetting('adBlocker', !settings.adBlocker)} className={`p-1.5 rounded-md hover:bg-black/5 ${settings.themeMode === 'light' ? 'text-gray-600' : 'text-white/70 hover:bg-white/10'}`} title="Toggle">
-                              <SettingsIcon size={14} />
-                            </button>
-                            <button onClick={() => updateSetting('adBlocker', false)} className={`p-1.5 rounded-md text-blue-500 hover:bg-blue-500/10`} title="Disable">
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        </div>
+                        )}
 
                         <hr className={settings.themeMode === 'light' ? 'border-gray-200' : 'border-white/10'} />
 
@@ -1526,6 +1534,8 @@ export default function App() {
             setPasswords={setPasswords}
             handleBookmarkClick={handleBookmarkClick}
             updateSetting={updateSetting}
+            installedExtensions={installedExtensions}
+            setInstalledExtensions={setInstalledExtensions}
           />
         )}
       </AnimatePresence>
