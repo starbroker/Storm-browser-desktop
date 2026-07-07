@@ -35,9 +35,9 @@ const logoSvg = `
 </svg>
 `;
 
-// 3. Custom Sidebar SVG matching Storm Browser dark/blue theme (138x314)
+// 3. Custom Sidebar SVG matching Storm Browser dark/blue theme (164x314)
 const sidebarSvg = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 138 314" width="138" height="314">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 164 314" width="164" height="314">
   <defs>
     <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#05070a" />
@@ -53,7 +53,7 @@ const sidebarSvg = `
       <feComposite in="SourceGraphic" in2="blur" operator="over" />
     </filter>
   </defs>
-  <rect width="138" height="314" fill="url(#bgGrad)" />
+  <rect width="164" height="314" fill="url(#bgGrad)" />
   <path d="M-10,314 C40,250 80,180 30,120 C-10,70 10,20 0,0" fill="none" stroke="url(#stormGrad)" stroke-width="4" opacity="0.25" />
   <circle cx="100" cy="50" r="80" fill="url(#stormGrad)" opacity="0.08" filter="url(#glow)" />
   <g transform="translate(39, 45) scale(0.12)" filter="url(#glow)">
@@ -158,19 +158,19 @@ async function main() {
     // B. Generate installerSidebar.bmp
     console.log('- Generating build/installerSidebar.bmp...');
     const sidebarRaw = await sharp(Buffer.from(sidebarSvg))
-      .resize(138, 314)
+      .resize(164, 314)
       .ensureAlpha(1)
       .raw()
       .toBuffer();
     
     // Extract RGB from RGBA
-    const sidebarRGB = Buffer.alloc(138 * 314 * 3);
-    for (let i = 0; i < 138 * 314; i++) {
+    const sidebarRGB = Buffer.alloc(164 * 314 * 3);
+    for (let i = 0; i < 164 * 314; i++) {
       sidebarRGB[i * 3] = sidebarRaw[i * 4];
       sidebarRGB[i * 3 + 1] = sidebarRaw[i * 4 + 1];
       sidebarRGB[i * 3 + 2] = sidebarRaw[i * 4 + 2];
     }
-    const sidebarBmp = encodeBMP(138, 314, sidebarRGB);
+    const sidebarBmp = encodeBMP(164, 314, sidebarRGB);
     fs.writeFileSync(path.join(buildDir, 'installerSidebar.bmp'), sidebarBmp);
 
     // C. Generate installerHeader.bmp

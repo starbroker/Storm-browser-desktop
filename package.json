@@ -1,7 +1,7 @@
 {
   "name": "react-example",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "main": "main.cjs",
   "build": {
@@ -30,10 +30,12 @@
       "installerSidebar": "build/installerSidebar.bmp",
       "installerHeader": "build/installerHeader.bmp",
       "shortcutName": "Storm Browser",
-      "runAfterFinish": true
+      "runAfterFinish": true,
+      "include": "build/installer.nsh"
     },
     "appx": {
-      "identityName": "com.stormbrowser.app",
+      "applicationId": "StormBrowser",
+      "identityName": "StormBrowser",
       "publisher": "CN=StormBrowser",
       "publisherDisplayName": "Storm Browser",
       "displayName": "Storm Browser"
