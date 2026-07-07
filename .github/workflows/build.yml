@@ -38,6 +38,7 @@ jobs:
         path: |
           release/*.exe
           release/*.msix
+          release/*.appx
           release/*.dmg
           release/*.AppImage
           release/*.deb
