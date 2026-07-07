@@ -18,8 +18,25 @@
     },
     "win": {
       "target": [
-        "nsis"
-      ]
+        "nsis",
+        "msix"
+      ],
+      "forceCodeSigning": false,
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerSidebar": "build/installerSidebar.bmp",
+      "installerHeader": "build/installerHeader.bmp",
+      "shortcutName": "Storm Browser",
+      "runAfterFinish": true
+    },
+    "appx": {
+      "identityName": "com.stormbrowser.app",
+      "publisher": "CN=StormBrowser",
+      "publisherDisplayName": "Storm Browser",
+      "displayName": "Storm Browser"
     },
     "files": [
       "dist/**/*",
@@ -39,7 +56,10 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "electron:build": "vite build && electron-builder"
+    "electron:build": "node generate-assets.js && vite build && electron-builder",
+    "electron:build:win": "node generate-assets.js && vite build && electron-builder --win",
+    "electron:build:mac": "node generate-assets.js && vite build && electron-builder --mac",
+    "electron:build:linux": "node generate-assets.js && vite build && electron-builder --linux"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -64,6 +84,7 @@
     "electron": "^43.0.0",
     "electron-builder": "^26.15.3",
     "esbuild": "^0.25.0",
+    "sharp": "^0.35.3",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
