@@ -1,74 +1,239 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <script>
-      // Fix fetch getter issue by providing a setter if it's missing, BEFORE extensions run.
-      // Wait, we are in index.html, extensions might run before us.
-      try {
-        const desc = Object.getOwnPropertyDescriptor(window, 'fetch');
-        if (desc && desc.get && !desc.set) {
-          Object.defineProperty(window, 'fetch', {
-            get: desc.get,
-            set: function(v) {
-              Object.defineProperty(window, 'fetch', {
-                value: v,
-                writable: true,
-                configurable: true,
-                enumerable: true
-              });
-            },
-            configurable: true,
-            enumerable: true
-          });
-        }
-      } catch(e) {}
-    </script>
+:root {
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --transition-fluid: cubic-bezier(0.22, 1, 0.36, 1);
+}
 
-    <script>
-      // Ultimate suppression of fetch extension errors
-      const origAddEventListener = window.addEventListener;
-      window.addEventListener = function(type, listener, options) {
-        if (type === 'error' || type === 'unhandledrejection') {
-          const wrapped = function(e) {
-            const msg = e.message || (e.reason && e.reason.message) || '';
-            if (msg.includes('Cannot set property fetch') || msg.includes('fetch')) {
-              e.preventDefault();
-              e.stopImmediatePropagation();
-              return;
-            }
-            return listener.apply(this, arguments);
-          };
-          return origAddEventListener.call(this, type, wrapped, options);
-        }
-        return origAddEventListener.call(this, type, listener, options);
-      };
-      
-      const origConsoleError = console.error;
-      console.error = function() {
-        if (arguments[0] && typeof arguments[0] === 'string' && (arguments[0].includes('Cannot set property fetch') || arguments[0].includes('fetch'))) {
-          return;
-        }
-        if (arguments[0] && arguments[0].message && (arguments[0].message.includes('Cannot set property fetch') || arguments[0].message.includes('fetch'))) {
-          return;
-        }
-        return origConsoleError.apply(this, arguments);
-      };
+/* ---- Accent themes ---- */
+.accent-storm-blue { --accent: #3d8bff; --accent-soft: rgba(61,139,255,0.18); }
+.accent-coral      { --accent: #ff6b6b; --accent-soft: rgba(255,107,107,0.18); }
+.accent-mint       { --accent: #2fd6a5; --accent-soft: rgba(47,214,165,0.18); }
+.accent-violet     { --accent: #9b6bff; --accent-soft: rgba(155,107,255,0.18); }
+.accent-amber      { --accent: #ffb02e; --accent-soft: rgba(255,176,46,0.18); }
 
-      window.onerror = function(msg) {
-        if (typeof msg === 'string' && msg.includes('fetch')) return true;
-      };
-    </script>
+/* ---- Dark / light ---- */
+.theme-dark {
+  --bg: #0e0f12;
+  --surface: #17181d;
+  --surface-2: #202127;
+  --text: #f2f3f5;
+  --text-dim: #9aa0aa;
+  --border: rgba(255,255,255,0.08);
+  --shadow: 0 8px 30px rgba(0,0,0,0.35);
+}
+.theme-light {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface-2: #eceef2;
+  --text: #16171b;
+  --text-dim: #6b7280;
+  --border: rgba(0,0,0,0.08);
+  --shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
 
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Storm Browser</title>
-    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-    
-  
-    
-</head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+/* ---- Density ---- */
+.density-compact    { --pad-unit: 4px; --bar-h: 40px; --font-size: 13px; }
+.density-comfortable{ --pad-unit: 8px; --bar-h: 48px; --font-size: 14px; }
+.density-spacious    { --pad-unit: 12px; --bar-h: 56px; --font-size: 15px; }
+
+/* ---- Fonts ---- */
+.font-system { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+.font-inter  { font-family: "Inter", -apple-system, sans-serif; }
+.font-mono   { font-family: "SFMono-Regular", Consolas, monospace; }
+.font-serif  { font-family: Georgia, "Times New Roman", serif; }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body { background: var(--bg); color: var(--text); font-size: var(--font-size); }
+
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.35s var(--transition-fluid), color 0.35s var(--transition-fluid);
+}
+
+/* ---- Tab strip ---- */
+#tabstrip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--bar-h);
+  padding: 0 var(--pad-unit);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  -webkit-app-region: drag;
+}
+#tabs {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-app-region: no-drag;
+}
+#tabs::-webkit-scrollbar { display: none; }
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 200px;
+  min-width: 120px;
+  padding: 0 10px;
+  height: calc(var(--bar-h) - 10px);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.25s var(--transition-fluid);
+  border: 1px solid transparent;
+}
+.tab:hover { transform: translateY(-1px); }
+.tab.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text);
+}
+.tab .tab-title { flex: 1; overflow: hidden; text-overflow: ellipsis; font-size: 0.85em; }
+.tab .tab-close { opacity: 0.5; }
+.tab .tab-close:hover { opacity: 1; }
+
+#new-tab-btn, #tabstrip-actions button, .nav-btn, .close-btn, #choose-dir-btn {
+  -webkit-app-region: no-drag;
+  background: var(--surface-2);
+  border: none;
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: transform 0.2s var(--transition-fluid), background 0.2s;
+}
+#new-tab-btn:hover, #tabstrip-actions button:hover, .nav-btn:hover { background: var(--accent-soft); transform: scale(1.06); }
+#new-tab-btn { width: 30px; height: 30px; font-size: 16px; }
+#tabstrip-actions { display: flex; gap: 4px; -webkit-app-region: no-drag; }
+#tabstrip-actions button { width: 32px; height: 32px; }
+
+/* ---- Nav bar ---- */
+#navbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--pad-unit) 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.nav-btn { width: 34px; height: 34px; font-size: 15px; }
+#urlbar-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+  padding: 0 12px;
+  height: 36px;
+  border: 1px solid transparent;
+  transition: border-color 0.2s var(--transition-fluid);
+}
+#urlbar-wrap:focus-within { border-color: var(--accent); }
+#urlbar {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 0.95em;
+}
+#privacy-indicator { color: var(--accent); }
+
+/* ---- Web view container ---- */
+#view-container { flex: 1; position: relative; background: var(--bg); }
+webview { width: 100%; height: 100%; display: none; }
+webview.active { display: flex; }
+
+/* ---- Mobile persistent nav ---- */
+#mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  padding: 6px;
+  gap: 4px;
+  z-index: 50;
+}
+.mnav-btn {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 16px;
+  transition: transform 0.2s var(--transition-fluid), background 0.2s;
+}
+.mnav-btn:active { transform: scale(0.9); background: var(--accent-soft); }
+
+@media (max-width: 640px) {
+  #mobile-nav { display: flex; }
+  #tabstrip { display: none; }
+}
+
+/* ---- Panels (downloads / settings) ---- */
+.panel {
+  position: absolute;
+  top: calc(var(--bar-h) + 10px);
+  right: 12px;
+  width: 340px;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  z-index: 100;
+  transform-origin: top right;
+  animation: panel-in 0.28s var(--transition-fluid);
+}
+.panel.hidden { display: none; }
+@keyframes panel-in {
+  from { opacity: 0; transform: scale(0.92) translateY(-6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.panel-header h3 { margin: 0; font-size: 1em; }
+.close-btn { width: 26px; height: 26px; }
+.panel-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 16px; }
+.panel-body section h4 { margin: 0 0 8px; color: var(--text-dim); font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.04em; }
+.switch-row, .option-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0;
+}
+select, input[type="text"], #opt-homepage {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+}
+#downloads-list { padding: 8px 16px 16px; display: flex; flex-direction: column; gap: 10px; }
+.download-item {
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+.download-item .fname { font-size: 0.9em; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.progress-bar { height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.progress-fill { height: 100%; background: var(--accent); transition: width 0.2s linear; }
