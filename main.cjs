@@ -1,53 +1,64 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, session } = require('electron');
 const path = require('path');
 
-function createWindow () {
-  const mainWindow = new BrowserWindow({
-    width: 1200,
-    height: 800,
+let mainWindow;
+
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    width: 1400,
+    height: 900,
+    minWidth: 800,
+    minHeight: 600,
     titleBarStyle: 'hiddenInset',
     vibrancy: 'sidebar',
     visualEffectState: 'active',
+    backgroundColor: '#1a1a1a',
+    frame: true,
+    trafficLightPosition: { x: 20, y: 15 },
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      webviewTag: true
+      webviewTag: true,
+      preload: path.join(__dirname, 'preload.cjs')
     }
   });
 
-  // Spoof User Agent to appear as 100% Chromium browser (Google Chrome)
-  const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
-  app.userAgentFallback = userAgent;
-
+  // Set custom user agent to appear as Chrome
+  const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
+  
+  // Ad & Tracker Blocker
   const filter = { urls: ['*://*/*'] };
   
-  // Ad Blocker implementation
-  mainWindow.webContents.session.webRequest.onBeforeRequest(filter, (details, callback) => {
-    // A simplified ad blocker using common ad domains.
-    // In a real browser, this would read from a blocklist (like EasyList) and check settings.
-    const adDomains = [
-      'doubleclick.net', 'adservice.google.com', 'googlesyndication.com', 
-      'adnxs.com', 'adsrvr.org', 'google-analytics.com', 'tracker.com', 'outbrain.com', 'taboola.com'
-    ];
+  const blocklist = [
+    'doubleclick.net', 'googlesyndication.com', 'googleadservices.com',
+    'google-analytics.com', 'googletagmanager.com', 'googletagservices.com',
+    'adnxs.com', 'adsafeprotected.com', 'scorecardresearch.com',
+    'moatads.com', 'outbrain.com', 'taboola.com', 'criteo.com',
+    'quantserve.com', 'facebook.net', 'connect.facebook.net',
+    'amazon-adsystem.com', 'media.net', 'bing.com/ads',
+    'adform.net', 'pubmatic.com', 'rubiconproject.com',
+    'openx.net', 'yandex.ru/ads', 'mmstat.com', 'hotjar.com',
+    'mixpanel.com', 'segment.io', 'branch.io', 'app-measurement.com'
+  ];
+
+  session.defaultSession.webRequest.onBeforeRequest(filter, (details, callback) => {
+    const url = details.url.toLowerCase();
+    const isBlocked = blocklist.some(domain => url.includes(domain));
     
-    // Check if URL matches any ad domains
-    const isAd = adDomains.some(domain => details.url.includes(domain));
-    
-    if (isAd) {
-      // Block the request
+    if (isBlocked) {
       callback({ cancel: true });
     } else {
       callback({ cancel: false });
     }
   });
 
-  // Strip anti-framing headers to improve webview compatibility and inject User-Agent
-  mainWindow.webContents.session.webRequest.onBeforeSendHeaders((details, callback) => {
+  // Strip anti-framing headers
+  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
     details.requestHeaders['User-Agent'] = userAgent;
     callback({ cancel: false, requestHeaders: details.requestHeaders });
   });
 
-  mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     const responseHeaders = Object.assign({}, details.responseHeaders);
     delete responseHeaders['X-Frame-Options'];
     delete responseHeaders['x-frame-options'];
@@ -57,20 +68,39 @@ function createWindow () {
   });
 
   if (app.isPackaged) {
-    mainWindow.loadFile(path.join(__dirname, 'dist/index.html'));
+    mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
   } else {
-    mainWindow.loadURL('http://localhost:3000');
+    mainWindow.loadURL('http://localhost:5173');
+    mainWindow.webContents.openDevTools();
   }
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
 }
 
 app.whenReady().then(() => {
   createWindow();
 
-  app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
   });
 });
 
-app.on('window-all-closed', function () {
-  if (process.platform !== 'darwin') app.quit();
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+// Security: Prevent navigation to unknown protocols
+app.on('web-contents-created', (event, contents) => {
+  contents.on('will-navigate', (event, navigationUrl) => {
+    const parsedUrl = new URL(navigationUrl);
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      event.preventDefault();
+    }
+  });
 });
