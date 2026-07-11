@@ -811,7 +811,7 @@ const isElectron = navigator.userAgent.includes("Electron");
                     )}
                     <Globe size={14} className="hidden opacity-70 flex-shrink-0" />
                     <span className="truncate text-xs font-medium tracking-wide max-w-[80px] sm:max-w-[100px]">{tab.title}</span>
-                    <span className="opacity-0 group-hover:opacity-60 text-[9px] font-mono tracking-tighter flex-shrink-0 transition-opacity duration-150 ml-1 select-none">
+                    <span className={`${settings.showMemoryOnTabs ? 'opacity-90 text-blue-400 font-semibold' : 'opacity-0 group-hover:opacity-60'} text-[9px] font-mono tracking-tighter flex-shrink-0 transition-opacity duration-150 ml-1 select-none`}>
                       {tab.memoryUsage || 24}MB
                     </span>
                   </div>

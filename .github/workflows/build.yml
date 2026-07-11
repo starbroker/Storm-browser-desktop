@@ -38,6 +38,16 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
+      - name: Create Self-Signed Certificate for MSIX Signing
+        shell: pwsh
+        run: |
+          $password = ConvertTo-SecureString "StormX123!" -AsPlainText -Force
+          $cert = New-SelfSignedCertificate -Type Custom -Subject "CN=StormXBrowser" -KeyUsage DigitalSignature -FriendlyName "StormX Browser Dev Cert" -CertStoreLocation "Cert:\CurrentUser\My" -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3")
+          $pfxPath = Join-Path $pwd "cert.pfx"
+          Export-PfxCertificate -Cert $cert -FilePath $pfxPath -Password $password
+          echo "CSC_LINK=$pfxPath" >> $env:GITHUB_ENV
+          echo "CSC_KEY_PASSWORD=StormX123!" >> $env:GITHUB_ENV
+
       - name: Build Windows EXE (NSIS)
         run: npm run build:win-exe
         env:

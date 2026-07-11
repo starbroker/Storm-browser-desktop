@@ -13,7 +13,8 @@ export const defaultSettings: AppSettings = {
   zoomLevel: 100,
   adBlocker: true,
   trackerBlocker: true,
-  speedDialLayout: 'grid'
+  speedDialLayout: 'grid',
+  showMemoryOnTabs: false
 };
 
 export function useSettings() {

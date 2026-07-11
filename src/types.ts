@@ -15,6 +15,7 @@ export interface AppSettings {
   trackerBlocker: boolean;
   // Advanced
   speedDialLayout: 'grid' | 'list';
+  showMemoryOnTabs?: boolean;
 }
 
 export interface Tab {

@@ -431,6 +431,24 @@ export function SettingsModal({
                         />
                       </div>
                     </div>
+
+                    {/* Always Show Memory Toggle */}
+                    <div className="flex items-center justify-between border-t border-white/10 pt-4 mt-4">
+                      <div>
+                        <h4 className="text-xs font-semibold text-white">Always show memory usage on tab bar</h4>
+                        <p className="text-[10px] text-white/50 mt-0.5">Displays resource impact continuously in the main browser interface</p>
+                      </div>
+                      <button
+                        onClick={() => updateSetting('showMemoryOnTabs', !settings.showMemoryOnTabs)}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                          settings.showMemoryOnTabs ? 'bg-blue-500' : 'bg-white/20'
+                        }`}
+                      >
+                        <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                          settings.showMemoryOnTabs ? 'translate-x-5' : 'translate-x-1'
+                        }`} />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Tab Process List / Task Manager */}
@@ -508,6 +526,23 @@ export function SettingsModal({
                                     )}
                                   </div>
                                   <span className="text-xs text-white/40 truncate mt-0.5">{tab.url || 'about:blank'}</span>
+                                  {/* Performance Impact bar */}
+                                  <div className="flex items-center space-x-2 mt-1.5">
+                                    <span className={`text-[10px] font-medium uppercase tracking-wider ${
+                                      mem > 150 ? 'text-red-400' : mem > 80 ? 'text-amber-400' : 'text-emerald-400'
+                                    }`}>
+                                      {mem > 150 ? 'High Impact' : mem > 80 ? 'Medium Impact' : 'Low Impact'}
+                                    </span>
+                                    <span className="text-[10px] text-white/20">•</span>
+                                    <div className="w-24 bg-white/10 rounded-full h-1 overflow-hidden">
+                                      <div 
+                                        className={`h-full rounded-full transition-all duration-500 ${
+                                          mem > 150 ? 'bg-red-500' : mem > 80 ? 'bg-amber-500' : 'bg-emerald-500'
+                                        }`}
+                                        style={{ width: `${Math.min(100, (mem / 300) * 100)}%` }}
+                                      />
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
 
