@@ -1,42 +1,149 @@
-name: Build Electron App
+name: Build StormX Browser Installers
+
 on:
   push:
     branches: [ main, master ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to build (all, win, mac, linux)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - win
+          - mac
+          - linux
+
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+  build-windows:
+    if: github.event.inputs.platform == 'all' || github.event.inputs.platform == 'win' || github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: windows-latest
+    
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 20
-    - name: Install dependencies
-      run: npm install
-    - name: Build and package
-      run: |
-        if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          npm run electron:build:win
-        elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-          npm run electron:build:mac
-        else
-          npm run electron:build:linux
-        fi
-      shell: bash
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: installers-${{ matrix.os }}
-        path: |
-          release/*.exe
-          release/*.dmg
-          release/*.AppImage
-          release/*.deb
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Windows EXE (NSIS)
+        run: npm run build:win-exe
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Windows MSIX
+        run: npm run build:win-msix
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Windows EXE Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stormx-browser-windows-exe
+          path: release/*.exe
+          if-no-files-found: ignore
+
+      - name: Upload Windows MSIX Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stormx-browser-windows-msix
+          path: release/*.msix
+          if-no-files-found: ignore
+
+  build-macos:
+    if: github.event.inputs.platform == 'all' || github.event.inputs.platform == 'mac' || github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build macOS DMG
+        run: npm run build:mac
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false' # Disable code signing for CI unless certs are provided
+
+      - name: Upload macOS DMG Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stormx-browser-macos-dmg
+          path: release/*.dmg
+          if-no-files-found: ignore
+
+  build-linux:
+    if: github.event.inputs.platform == 'all' || github.event.inputs.platform == 'linux' || github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Linux DEB
+        run: npm run build:linux
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Linux DEB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: stormx-browser-linux-deb
+          path: release/*.deb
+          if-no-files-found: ignore
+
+  release:
+    needs: [build-windows, build-macos, build-linux]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist-artifacts
+
+      - name: Prepare Release Assets
+        run: |
+          mkdir release-assets
+          find dist-artifacts -type f -exec mv {} release-assets/ \;
+          ls -la release-assets
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release-assets/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

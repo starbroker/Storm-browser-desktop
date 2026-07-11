@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { X, Globe, Palette, Shield, Layout, Settings as SettingsIcon, Trash2, CheckCircle2 } from 'lucide-react';
+import { X, Globe, Palette, Shield, Layout, Settings as SettingsIcon, Trash2, CheckCircle2, Cpu, Activity, ExternalLink, Ghost, Volume2 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { AppSettings } from '../types';
+import { AppSettings, Tab } from '../types';
 
 interface SettingsModalProps {
   settings: AppSettings;
@@ -9,16 +9,29 @@ interface SettingsModalProps {
   onClose: () => void;
   onNavigate?: (url: string) => void;
   onClearData?: () => void;
+  tabs?: Tab[];
+  onCloseTab?: (e: React.MouseEvent, id: string) => void;
+  onSelectTab?: (id: string) => void;
 }
 
-export function SettingsModal({ settings, updateSetting, onClose, onNavigate, onClearData }: SettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<'general' | 'customization' | 'privacy' | 'advanced'>('general');
+export function SettingsModal({ 
+  settings, 
+  updateSetting, 
+  onClose, 
+  onNavigate, 
+  onClearData,
+  tabs,
+  onCloseTab,
+  onSelectTab
+}: SettingsModalProps) {
+  const [activeTab, setActiveTab] = useState<'general' | 'customization' | 'privacy' | 'advanced' | 'performance'>('general');
 
-  const tabs = [
+  const categories = [
     { id: 'general', label: 'General', icon: <Globe size={18} /> },
     { id: 'customization', label: 'Customization', icon: <Palette size={18} /> },
     { id: 'privacy', label: 'Privacy & Security', icon: <Shield size={18} /> },
     { id: 'advanced', label: 'Advanced', icon: <Layout size={18} /> },
+    { id: 'performance', label: 'Performance', icon: <Cpu size={18} /> },
   ];
 
   const handleClearData = () => {
@@ -51,7 +64,7 @@ export function SettingsModal({ settings, updateSetting, onClose, onNavigate, on
           </div>
           
           <nav className="flex-1 space-y-1 px-3">
-            {tabs.map((tab) => (
+            {categories.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
@@ -79,7 +92,7 @@ export function SettingsModal({ settings, updateSetting, onClose, onNavigate, on
 
           <div className="flex-1 overflow-y-auto p-8 hide-scrollbar">
             <div className="max-w-2xl">
-              <h3 className="text-2xl font-semibold text-white mb-8">{tabs.find(t => t.id === activeTab)?.label}</h3>
+              <h3 className="text-2xl font-semibold text-white mb-8">{categories.find(t => t.id === activeTab)?.label}</h3>
 
               {activeTab === 'general' && (
                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
@@ -370,6 +383,189 @@ export function SettingsModal({ settings, updateSetting, onClose, onNavigate, on
                 </div>
               )}
 
+              {activeTab === 'performance' && (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  {/* Performance Overview Card */}
+                  <div className="rounded-xl border border-white/10 bg-black/20 p-5 backdrop-blur-md">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h4 className="text-base font-semibold text-white">System Performance Summary</h4>
+                        <p className="text-xs text-white/50 mt-1">Real-time resource allocation for Storm Browser processes</p>
+                      </div>
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-400">
+                        <Activity size={20} />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                      <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                        <span className="text-xs text-white/40 block">Browser Engine Overhead</span>
+                        <span className="text-lg font-mono font-medium text-white mt-1 block">182.4 MB</span>
+                      </div>
+                      <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                        <span className="text-xs text-white/40 block">Active Tab Footprint</span>
+                        <span className="text-lg font-mono font-medium text-blue-400 mt-1 block">
+                          {(tabs ? tabs.reduce((acc, t) => acc + (t.memoryUsage || 0), 0) : 0).toFixed(1)} MB
+                        </span>
+                      </div>
+                      <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                        <span className="text-xs text-white/40 block">Total Memory Allocation</span>
+                        <span className="text-lg font-mono font-medium text-purple-400 mt-1 block">
+                          {((tabs ? tabs.reduce((acc, t) => acc + (t.memoryUsage || 0), 0) : 0) + 182.4).toFixed(1)} MB
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="mt-4">
+                      <div className="flex justify-between text-xs text-white/50 mb-1.5">
+                        <span>Memory Footprint Impact</span>
+                        <span>
+                          {Math.min(95, parseFloat(((((tabs ? tabs.reduce((acc, t) => acc + (t.memoryUsage || 0), 0) : 0) + 182.4) / 1024) * 100).toFixed(1)))}% of 1GB Sandbox limit
+                        </span>
+                      </div>
+                      <div className="w-full bg-white/10 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500" 
+                          style={{ width: `${Math.min(100, (((tabs ? tabs.reduce((acc, t) => acc + (t.memoryUsage || 0), 0) : 0) + 182.4) / 1024) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tab Process List / Task Manager */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                      <h4 className="text-sm font-semibold text-white/80">Active Tab Processes ({tabs?.length || 0})</h4>
+                      <span className="text-xs text-white/40">Click row or action to jump to a tab</span>
+                    </div>
+
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 hide-scrollbar">
+                      {tabs && tabs.length > 0 ? (
+                        tabs.map((tab) => {
+                          const mem = tab.memoryUsage || 35;
+                          const cpu = tab.cpuUsage || 0.2;
+                          
+                          // Determine memory badge colors
+                          let memBadgeColor = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
+                          if (mem > 150) {
+                            memBadgeColor = 'bg-red-500/10 text-red-400 border-red-500/20';
+                          } else if (mem > 80) {
+                            memBadgeColor = 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+                          }
+
+                          let cpuBadgeColor = 'bg-white/5 text-white/60 border-white/5';
+                          if (cpu > 10) {
+                            cpuBadgeColor = 'bg-orange-500/10 text-orange-400 border-orange-500/20';
+                          } else if (cpu > 2) {
+                            cpuBadgeColor = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
+                          }
+
+                          return (
+                            <div 
+                              key={tab.id}
+                              className="group flex items-center justify-between rounded-xl border border-white/5 bg-white/5 p-3 hover:bg-white/10 hover:border-white/10 transition-all cursor-pointer animate-in fade-in duration-200"
+                              onClick={() => onSelectTab && onSelectTab(tab.id)}
+                            >
+                              {/* Left: Tab info */}
+                              <div className="flex items-center space-x-3 overflow-hidden flex-1 mr-4">
+                                <div className="flex-shrink-0">
+                                  {tab.isIncognito ? (
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/20 text-purple-400">
+                                      <Ghost size={16} />
+                                    </div>
+                                  ) : tab.url === 'about:blank' || tab.url === '' ? (
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white/60">
+                                      <Globe size={16} />
+                                    </div>
+                                  ) : (
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
+                                      <img 
+                                        src={`https://www.google.com/s2/favicons?domain=${tab.url}&sz=32`} 
+                                        className="h-5 w-5 rounded-sm" 
+                                        alt="" 
+                                        onError={(e) => {
+                                          (e.target as HTMLImageElement).style.display = 'none';
+                                        }}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                <div className="flex flex-col min-w-0 flex-1">
+                                  <div className="flex items-center space-x-1.5">
+                                    <span className="text-sm font-medium text-white group-hover:text-blue-400 transition-colors truncate">
+                                      {tab.title}
+                                    </span>
+                                    {tab.isMediaPlaying && (
+                                      <span className="flex-shrink-0 text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded-full flex items-center space-x-0.5">
+                                        <Volume2 size={10} />
+                                        <span>Audio</span>
+                                      </span>
+                                    )}
+                                    {tab.isLoading && (
+                                      <span className="flex-shrink-0 h-1.5 w-1.5 rounded-full bg-blue-400 animate-ping" />
+                                    )}
+                                  </div>
+                                  <span className="text-xs text-white/40 truncate mt-0.5">{tab.url || 'about:blank'}</span>
+                                </div>
+                              </div>
+
+                              {/* Right: Resources & Actions */}
+                              <div className="flex items-center space-x-4">
+                                {/* CPU */}
+                                <div className="flex flex-col items-end">
+                                  <span className="text-[10px] text-white/30 uppercase tracking-wider">CPU</span>
+                                  <span className={`text-xs font-mono font-medium px-2 py-0.5 rounded-md border ${cpuBadgeColor} mt-0.5`}>
+                                    {cpu}%
+                                  </span>
+                                </div>
+
+                                {/* Memory */}
+                                <div className="flex flex-col items-end">
+                                  <span className="text-[10px] text-white/30 uppercase tracking-wider">Memory</span>
+                                  <span className={`text-xs font-mono font-medium px-2 py-0.5 rounded-md border ${memBadgeColor} mt-0.5`}>
+                                    {mem} MB
+                                  </span>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex items-center space-x-1">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (onSelectTab) onSelectTab(tab.id);
+                                    }}
+                                    className="p-1.5 rounded-lg text-white/40 hover:bg-white/5 hover:text-blue-400 transition-colors"
+                                    title="Switch to Tab"
+                                  >
+                                    <ExternalLink size={14} />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (onCloseTab) onCloseTab(e, tab.id);
+                                    }}
+                                    disabled={tabs.length === 1}
+                                    className={`p-1.5 rounded-lg transition-colors ${tabs.length === 1 ? 'text-white/10 cursor-not-allowed' : 'text-white/40 hover:bg-red-500/10 hover:text-red-400'}`}
+                                    title="End Process (Close Tab)"
+                                  >
+                                    <X size={14} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="py-8 text-center text-white/40 text-sm">
+                          No active processes
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

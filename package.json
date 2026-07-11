@@ -1,116 +1,109 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<title>Storm Browser</title>
-<link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <div id="app" class="theme-dark density-comfortable">
-
-    <!-- Tab strip -->
-    <div id="tabstrip">
-      <div id="tabs"></div>
-      <button id="new-tab-btn" title="New tab">+</button>
-      <div id="tabstrip-actions">
-        <button id="downloads-btn" title="Downloads">⭳</button>
-        <button id="theme-toggle-btn" title="Toggle dark mode">◐</button>
-        <button id="settings-btn" title="Settings">⚙</button>
-      </div>
-    </div>
-
-    <!-- Nav bar (persistent, works on mobile widths too) -->
-    <div id="navbar">
-      <button class="nav-btn" id="back-btn" title="Back">←</button>
-      <button class="nav-btn" id="fwd-btn" title="Forward">→</button>
-      <button class="nav-btn" id="reload-btn" title="Reload">⟳</button>
-      <div id="urlbar-wrap">
-        <span id="privacy-indicator" title="Tracking protection active">🛡</span>
-        <input id="urlbar" placeholder="Search StormX or type a URL" spellcheck="false" />
-      </div>
-      <button class="nav-btn" id="home-btn" title="Home">⌂</button>
-    </div>
-
-    <!-- Webview container -->
-    <div id="view-container"></div>
-
-    <!-- Mobile-style persistent bottom nav (shown on narrow viewports) -->
-    <div id="mobile-nav">
-      <button class="mnav-btn" data-action="back">←</button>
-      <button class="mnav-btn" data-action="forward">→</button>
-      <button class="mnav-btn" data-action="new-tab">+</button>
-      <button class="mnav-btn" data-action="tabs">▤</button>
-      <button class="mnav-btn" data-action="downloads">⭳</button>
-    </div>
-
-    <!-- Downloads panel -->
-    <div id="downloads-panel" class="panel hidden">
-      <div class="panel-header"><h3>Downloads</h3><button class="close-btn" data-close="downloads-panel">✕</button></div>
-      <div id="downloads-list"></div>
-    </div>
-
-    <!-- Settings panel -->
-    <div id="settings-panel" class="panel hidden">
-      <div class="panel-header"><h3>Settings</h3><button class="close-btn" data-close="settings-panel">✕</button></div>
-      <div class="panel-body">
-
-        <section>
-          <h4>Privacy</h4>
-          <label class="switch-row"><span>Ad blocker</span><input type="checkbox" id="opt-adblock" checked></label>
-          <label class="switch-row"><span>Tracker protection</span><input type="checkbox" id="opt-tracker" checked></label>
-        </section>
-
-        <section>
-          <h4>Appearance</h4>
-          <label class="switch-row"><span>Dark mode</span><input type="checkbox" id="opt-dark" checked></label>
-          <div class="option-row">
-            <span>Accent theme</span>
-            <select id="opt-accent">
-              <option value="storm-blue">Storm Blue</option>
-              <option value="coral">Coral</option>
-              <option value="mint">Mint</option>
-              <option value="violet">Violet</option>
-              <option value="amber">Amber</option>
-            </select>
-          </div>
-          <div class="option-row">
-            <span>Font</span>
-            <select id="opt-font">
-              <option value="system">System Default</option>
-              <option value="inter">Inter</option>
-              <option value="mono">Monospace</option>
-              <option value="serif">Serif</option>
-            </select>
-          </div>
-          <div class="option-row">
-            <span>Layout density</span>
-            <select id="opt-density">
-              <option value="compact">Compact</option>
-              <option value="comfortable" selected>Comfortable</option>
-              <option value="spacious">Spacious</option>
-            </select>
-          </div>
-        </section>
-
-        <section>
-          <h4>Downloads</h4>
-          <div class="option-row">
-            <span id="download-dir-label">Default folder</span>
-            <button id="choose-dir-btn">Change…</button>
-          </div>
-        </section>
-
-        <section>
-          <h4>Startup</h4>
-          <div class="option-row">
-            <span>Home / new-tab page</span>
-            <input id="opt-homepage" value="https://search.stormx.ninja" />
-          </div>
-        </section>
-      </div>
-    </div>
-
-  </div>
-  <script src="renderer.js"></script>
-</body>
-</html>
+{
+  "name": "storm-browser",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "main.cjs",
+  "build": {
+    "appId": "com.stormbrowser.app",
+    "productName": "StormX Browser",
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "msix"
+      ],
+      "forceCodeSigning": false,
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "StormX Browser",
+      "uninstallDisplayName": "StormX Browser"
+    },
+    "msix": {
+      "identityName": "StormXBrowser",
+      "publisher": "CN=StormXBrowser",
+      "publisherDisplayName": "StormX Browser",
+      "displayName": "StormX Browser",
+      "allowElevation": true,
+      "languages": [
+        "en-US"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.developer-tools"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Network"
+    },
+    "files": [
+      "dist/**/*",
+      "main.cjs"
+    ]
+  },
+  "scripts": {
+    "dev": "vite --port=3000 --host=0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "tsc --noEmit",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://127.0.0.1:3000 && cross-env ELECTRON_START_URL=http://127.0.0.1:3000 electron .\"",
+    "electron:build": "vite build && electron-builder",
+    "electron:build:win": "vite build && electron-builder --win",
+    "electron:build:linux": "vite build && electron-builder --linux",
+    "build:win-exe": "vite build && electron-builder --win nsis",
+    "build:win-msix": "vite build && electron-builder --win msix",
+    "build:mac": "vite build && electron-builder --mac dmg",
+    "build:linux": "vite build && electron-builder --linux deb"
+  },
+  "dependencies": {
+    "@google/genai": "^2.4.0",
+    "@mozilla/readability": "^0.6.0",
+    "@tailwindcss/vite": "^4.1.14",
+    "@vitejs/plugin-react": "^5.0.4",
+    "dompurify": "^3.4.11",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "lucide-react": "^0.546.0",
+    "motion": "^12.23.24",
+    "react": "^19.0.1",
+    "react-dom": "^19.0.1",
+    "vite": "^6.2.3"
+  },
+  "devDependencies": {
+    "@types/dompurify": "^3.0.5",
+    "@types/express": "^4.17.21",
+    "@types/mozilla-readability": "^0.2.1",
+    "@types/node": "^22.14.0",
+    "autoprefixer": "^10.4.21",
+    "concurrently": "^10.0.3",
+    "cross-env": "^10.1.0",
+    "electron": "^43.1.0",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.25.0",
+    "rcedit": "^5.0.2",
+    "sharp": "^0.35.3",
+    "tailwindcss": "^4.1.14",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.2",
+    "wait-on": "^9.0.10"
+  },
+  "author": {
+    "name": "Himank",
+    "email": "himankcpro@gmail.com"
+  },
+  "description": "Storm Browser",
+  "homepage": "https://github.com/himank/storm-browser"
+}

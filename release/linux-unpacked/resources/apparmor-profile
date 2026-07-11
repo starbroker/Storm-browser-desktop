@@ -1,9 +1,9 @@
 abi <abi/4.0>,
 include <tunables/global>
 
-profile "react-example" "/opt/Storm Browser/react-example" flags=(unconfined) {
+profile "storm-browser" "/opt/Storm Browser/storm-browser" flags=(unconfined) {
   userns,
 
   # Site-specific additions and overrides. See local/README for details.
-  include if exists <local/react-example>
+  include if exists <local/storm-browser>
 }

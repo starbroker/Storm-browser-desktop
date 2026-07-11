@@ -9,6 +9,11 @@ export default defineConfig(() => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
+        'undici': path.resolve(__dirname, 'empty-undici.js'),
+        'whatwg-fetch': path.resolve(__dirname, 'empty-undici.js'),
+        'node-fetch': path.resolve(__dirname, 'empty-undici.js'),
+        'cross-fetch': path.resolve(__dirname, 'empty-undici.js'),
+        'isomorphic-fetch': path.resolve(__dirname, 'empty-undici.js'),
       },
     },
     server: {

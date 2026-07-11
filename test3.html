@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+  window.onerror = function(msg) { console.log('ERROR:', msg); };
+  Object.defineProperty(window, 'fetch', { get: () => function() {}, configurable: false });
+  window.fetch = 123;
+</script>
+</head>
+<body></body>
+</html>

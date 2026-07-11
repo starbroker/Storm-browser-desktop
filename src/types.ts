@@ -30,6 +30,8 @@ export interface Tab {
   isMediaPlaying?: boolean;
   isMuted?: boolean;
   isIncognito?: boolean;
+  memoryUsage?: number;
+  cpuUsage?: number;
 }
 
 export interface Bookmark {

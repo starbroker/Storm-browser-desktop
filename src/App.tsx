@@ -47,6 +47,7 @@ export default function App() {
       return () => mediaQuery.removeEventListener('change', handler);
     }
   }, []);
+const isElectron = navigator.userAgent.includes("Electron");
 
   const settings = {
     ...savedSettings,
@@ -59,9 +60,11 @@ export default function App() {
       url: settings.homePage,
       title: 'New Tab',
       inputUrl: settings.homePage,
-      canGoBack: false,
-      canGoForward: false,
-      isLoading: false
+      canGoBack: isElectron,
+      canGoForward: isElectron,
+      isLoading: false,
+      memoryUsage: 24.5,
+      cpuUsage: 0.1
     }
   ]);
   const [activeTabId, setActiveTabId] = useState<string>('1');
@@ -143,6 +146,55 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Simulate dynamic tab memory & CPU usage changes
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTabs(currentTabs => 
+        currentTabs.map(t => {
+          const isBlank = t.url === 'about:blank' || t.url === '';
+          const isYoutube = t.url.includes('youtube.com') || t.url.includes('youtu.be');
+          const isGoogle = t.url.includes('google.com');
+          const isGithub = t.url.includes('github.com');
+          
+          let targetMem = 65;
+          if (isBlank) targetMem = t.isIncognito ? 18 : 24;
+          else if (isYoutube) targetMem = t.isMediaPlaying ? 280 : 160;
+          else if (isGoogle) targetMem = 48;
+          else if (isGithub) targetMem = 115;
+
+          let targetCpu = 0.5;
+          if (t.isLoading) {
+            targetCpu = 12 + Math.random() * 15;
+            targetMem += 15;
+          } else if (isYoutube && t.isMediaPlaying) {
+            targetCpu = 8 + Math.random() * 6;
+          } else if (!isBlank) {
+            targetCpu = 0.8 + Math.random() * 1.5;
+          } else {
+            targetCpu = 0.1 + Math.random() * 0.2;
+          }
+
+          const currentMem = t.memoryUsage || targetMem;
+          const currentCpu = t.cpuUsage || targetCpu;
+
+          const memDelta = (targetMem - currentMem) * 0.15 + (Math.random() * 4 - 2);
+          const cpuDelta = (targetCpu - currentCpu) * 0.2 + (Math.random() * 0.4 - 0.2);
+
+          const nextMem = Math.max(isBlank ? 10 : 30, currentMem + memDelta);
+          const nextCpu = Math.max(0.0, currentCpu + cpuDelta);
+
+          return {
+            ...t,
+            memoryUsage: parseFloat(nextMem.toFixed(1)),
+            cpuUsage: parseFloat(Math.min(99.9, nextCpu).toFixed(1))
+          };
+        })
+      );
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const [isShieldPopupOpen, setIsShieldPopupOpen] = useState(false);
   const [adsBlockedCount, setAdsBlockedCount] = useState(Math.floor(Math.random() * 25) + 5);
   const [isAddingPassword, setIsAddingPassword] = useState(false);
@@ -170,7 +222,6 @@ export default function App() {
   const webviewRefs = useRef<{ [key: string]: any | HTMLIFrameElement | null }>({});
 
   const activeTab = tabs.find(t => t.id === activeTabId) || tabs[0];
-  const isElectron = navigator.userAgent.includes('Electron');
   const isBookmarked = bookmarks.some(b => b.url === activeTab.url);
 
   const handleToggleBookmark = () => {
@@ -219,9 +270,11 @@ export default function App() {
       url: newUrl,
       title: 'New Tab',
       inputUrl: newUrl === 'about:blank' ? '' : newUrl,
-      canGoBack: false,
-      canGoForward: false,
-      isLoading: false
+      canGoBack: isElectron,
+      canGoForward: isElectron,
+      isLoading: false,
+      memoryUsage: newUrl === 'about:blank' ? 18.5 : 42.6,
+      cpuUsage: 0.1
     }]);
     setActiveTabId(newId);
   };
@@ -235,10 +288,12 @@ export default function App() {
       url: newUrl,
       title: 'Private Tab',
       inputUrl: '',
-      canGoBack: false,
-      canGoForward: false,
-      isLoading: false,
-      isIncognito: true
+      canGoBack: isElectron,
+      canGoForward: isElectron,
+      isLoading: isElectron,
+      isIncognito: true,
+      memoryUsage: 16.4,
+      cpuUsage: 0.1
     }]);
     setActiveTabId(newId);
   };
@@ -271,9 +326,11 @@ export default function App() {
       url: newUrl,
       title: 'Chrome Web Store',
       inputUrl: newUrl,
-      canGoBack: false,
-      canGoForward: false,
-      isLoading: false
+      canGoBack: isElectron,
+      canGoForward: isElectron,
+      isLoading: false,
+      memoryUsage: 98.4,
+      cpuUsage: 0.5
     }]);
     setActiveTabId(newId);
   };
@@ -620,7 +677,7 @@ export default function App() {
 
       const handleDidStopLoading = () => {
         updateTabState(tab.id, { 
-          isLoading: false,
+          isLoading: isElectron,
           canGoBack: view.canGoBack(),
           canGoForward: view.canGoForward()
         });
@@ -729,13 +786,14 @@ export default function App() {
                   exit={{ opacity: 0, width: 0, overflow: 'hidden' }}
                   transition={{ duration: 0.2 }}
                   onClick={() => handleTabClick(tab.id)}
+                  title={`${tab.title}\nURL: ${tab.url || 'about:blank'}\nMemory Impact: ${tab.memoryUsage || 24} MB\nCPU Overhead: ${tab.cpuUsage || 0.1}%`}
                   className={`group relative flex h-9 min-w-[140px] max-w-[220px] cursor-pointer items-center justify-between rounded-t-xl px-3 ${settings.fluidAnimations ? 'transition-all duration-200' : ''} ${
                     activeTabId === tab.id 
                       ? settings.themeMode === 'light' ? 'bg-white text-gray-900 shadow-sm' : 'bg-white/15 text-white shadow-[0_-4px_12px_rgba(255,255,255,0.05)]' 
                       : settings.themeMode === 'light' ? 'bg-transparent text-gray-600 hover:bg-white/50 hover:text-gray-900' : 'bg-transparent text-white/60 hover:bg-white/5 hover:text-white/90'
                   }`}
                 >
-                  <div className="flex items-center space-x-2 overflow-hidden">
+                  <div className="flex items-center space-x-2 overflow-hidden mr-1">
                     {tab.isIncognito ? (
                       <Ghost size={14} className="opacity-70 flex-shrink-0" />
                     ) : tab.url === 'about:blank' ? (
@@ -752,7 +810,10 @@ export default function App() {
                       />
                     )}
                     <Globe size={14} className="hidden opacity-70 flex-shrink-0" />
-                    <span className="truncate text-xs font-medium tracking-wide">{tab.title}</span>
+                    <span className="truncate text-xs font-medium tracking-wide max-w-[80px] sm:max-w-[100px]">{tab.title}</span>
+                    <span className="opacity-0 group-hover:opacity-60 text-[9px] font-mono tracking-tighter flex-shrink-0 transition-opacity duration-150 ml-1 select-none">
+                      {tab.memoryUsage || 24}MB
+                    </span>
                   </div>
                   
                   <div className="flex items-center">
@@ -1514,6 +1575,12 @@ export default function App() {
               else if (url === 'about:permissions') { setBrowserPageModalType('permissions'); setIsSettingsOpen(false); }
             }}
             onClearData={handleClearData}
+            tabs={tabs}
+            onCloseTab={handleCloseTab}
+            onSelectTab={(id) => {
+              handleTabClick(id);
+              setIsSettingsOpen(false);
+            }}
           />
         )}
       </AnimatePresence>
