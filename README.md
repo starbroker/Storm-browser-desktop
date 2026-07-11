@@ -1,177 +1,142 @@
-const { app, BrowserWindow, session, ipcMain, shell, Menu, dialog } = require('electron');
-const path = require('path');
-const fs = require('fs');
-const https = require('https');
-const { autoUpdater } = require('electron-updater');
-const Store = require('electron-store');
+# Storm Browser
 
-const store = new Store();
+A modern, privacy-focused desktop browser built with Electron and React, featuring a beautiful **ColorOS 16-inspired "Frosted Glass"** design aesthetic.
 
-let mainWindow;
+## Features
 
-// ---------- Ad / tracker block lists ----------
-// Ships with a bundled baseline list; refreshed from a remote list on startup (best-effort, non-blocking).
-const BLOCKLIST_PATH = path.join(app.getPath('userData'), 'blocklist.json');
-let blockedHosts = new Set(require('./default-blocklist.json'));
+### Core Browser Engine
+- Built on Chromium via Electron for maximum web compatibility
+- Full tab management with horizontal tab strip
+- Hardware-accelerated rendering
+- Native webview support
 
-function loadCachedBlocklist() {
-  try {
-    if (fs.existsSync(BLOCKLIST_PATH)) {
-      const cached = JSON.parse(fs.readFileSync(BLOCKLIST_PATH, 'utf-8'));
-      cached.forEach((h) => blockedHosts.add(h));
-    }
-  } catch (e) {
-    console.error('blocklist cache read failed', e);
-  }
-}
+### Design System (ColorOS 16 Aesthetic)
+- **Frosted Glass** translucent backgrounds with blur effects
+- Deep dark mode and clean light mode
+- Fluid animations and smooth transitions
+- Customizable accent colors
+- Multiple layout density options
 
-function refreshRemoteBlocklist() {
-  // Community hosts-file style list (EasyList-derived, aggregated). Fails silently if offline.
-  const url = 'https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts';
-  https
-    .get(url, (res) => {
-      let data = '';
-      res.on('data', (chunk) => (data += chunk));
-      res.on('end', () => {
-        try {
-          const hosts = data
-            .split('\n')
-            .filter((l) => l.startsWith('0.0.0.0') || l.startsWith('127.0.0.1'))
-            .map((l) => l.split(/\s+/)[1])
-            .filter(Boolean);
-          hosts.forEach((h) => blockedHosts.add(h));
-          fs.writeFileSync(BLOCKLIST_PATH, JSON.stringify(Array.from(blockedHosts)));
-        } catch (e) {
-          console.error('blocklist parse failed', e);
-        }
-      });
-    })
-    .on('error', (e) => console.error('blocklist fetch failed', e));
-}
+### Tab Management
+- Horizontal tab strip at the top
+- Tab titles with favicons
+- Quick close buttons
+- New tab and private/incognito tab support
+- Tab muting for media playback
 
-function hostFromUrl(url) {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return '';
-  }
-}
+### Navigation Bar
+- Back, Forward, Refresh buttons
+- Unified URL/Search bar (Omnibox)
+- Shield icon for privacy settings
+- Settings menu dropdown
+- Reader mode toggle
+- Bookmark star button
+- Translate page option
 
-function isBlocked(url) {
-  const host = hostFromUrl(url);
-  if (!host) return false;
-  if (blockedHosts.has(host)) return true;
-  // check parent domains, e.g. ads.example.com -> example.com
-  const parts = host.split('.');
-  for (let i = 1; i < parts.length - 1; i++) {
-    if (blockedHosts.has(parts.slice(i).join('.'))) return true;
-  }
-  return false;
-}
+### Search Engines
+- DuckDuckGo (default)
+- Google
+- Bing
+- StormX (custom)
 
-function registerAdBlocker(ses) {
-  ses.webRequest.onBeforeRequest((details, callback) => {
-    const adblockEnabled = store.get('settings.adblock', true);
-    const trackerProtection = store.get('settings.trackerProtection', true);
-    if ((adblockEnabled || trackerProtection) && isBlocked(details.url)) {
-      return callback({ cancel: true });
-    }
-    callback({ cancel: false });
-  });
+### Privacy & Security
+- Built-in ad blocker
+- Tracker protection
+- HTTPS enforcement
+- Private browsing mode
+- Password manager
+- Web permissions control
 
-  // Strip common tracking headers / referrer when tracker protection is on
-  ses.webRequest.onBeforeSendHeaders((details, callback) => {
-    const trackerProtection = store.get('settings.trackerProtection', true);
-    if (trackerProtection) {
-      delete details.requestHeaders['X-Client-Data'];
-      details.requestHeaders['DNT'] = '1';
-    }
-    callback({ requestHeaders: details.requestHeaders });
-  });
-}
+## Installation
 
-// ---------- Downloads ----------
-function registerDownloadHandler(ses) {
-  ses.on('will-download', (event, item, webContents) => {
-    const downloadDir = store.get('settings.downloadDir', app.getPath('downloads'));
-    const savePath = path.join(downloadDir, item.getFilename());
-    item.setSavePath(savePath);
+### Development Setup
 
-    const id = Date.now().toString();
-    mainWindow.webContents.send('download-started', {
-      id,
-      filename: item.getFilename(),
-      totalBytes: item.getTotalBytes(),
-      url: item.getURL(),
-    });
+```bash
+# Install dependencies
+npm install
 
-    item.on('updated', (e, state) => {
-      mainWindow.webContents.send('download-progress', {
-        id,
-        state,
-        receivedBytes: item.getReceivedBytes(),
-        totalBytes: item.getTotalBytes(),
-      });
-    });
+# Run in development mode
+npm run electron:dev
+```
 
-    item.once('done', (e, state) => {
-      mainWindow.webContents.send('download-done', { id, state, savePath });
-    });
-  });
-}
+### Building Installers
 
-ipcMain.handle('show-in-folder', (e, filePath) => shell.showItemInFolder(filePath));
-ipcMain.handle('open-path', (e, filePath) => shell.openPath(filePath));
-ipcMain.handle('choose-download-dir', async () => {
-  const res = await dialog.showOpenDialog(mainWindow, { properties: ['openDirectory'] });
-  if (!res.canceled) {
-    store.set('settings.downloadDir', res.filePaths[0]);
-    return res.filePaths[0];
-  }
-  return null;
-});
+```bash
+# Build for all platforms
+npm run electron:build
 
-ipcMain.handle('get-settings', () => store.get('settings', {}));
-ipcMain.handle('set-setting', (e, key, value) => store.set(`settings.${key}`, value));
+# Build for Windows only (.exe NSIS installer)
+npm run electron:build:win
 
-function createWindow() {
-  mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 800,
-    minWidth: 720,
-    minHeight: 480,
-    backgroundColor: '#0e0f12',
-    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-      webviewTag: true,
-      sandbox: false,
+# Build for macOS only (.dmg - Universal: arm64 + x64)
+npm run electron:build:mac
+
+# Build for Linux only
+npm run electron:build:linux
+```
+
+## GitHub Actions CI/CD
+
+The project includes automated build workflows that generate:
+- **macOS**: `.dmg` installer (Universal binary for Intel & Apple Silicon)
+- **Windows**: `.exe` NSIS installer (64-bit)
+- **Linux**: `.AppImage` and `.deb` packages
+
+Artifacts are automatically uploaded after each build.
+
+## Project Structure
+
+```
+storm-browser/
+├── src/                    # React source files
+│   ├── App.tsx            # Main browser UI component
+│   ├── components/        # Reusable UI components
+│   │   ├── SettingsModal.tsx
+│   │   └── BrowserPageModal.tsx
+│   ├── hooks/             # Custom React hooks
+│   │   └── useSettings.ts
+│   ├── types.ts           # TypeScript type definitions
+│   └── index.css          # Global styles with Tailwind
+├── main.cjs               # Electron main process
+├── preload.cjs            # Electron preload script
+├── package.json           # Dependencies and build config
+├── vite.config.ts         # Vite bundler configuration
+└── .github/workflows/     # CI/CD pipelines
+    └── build.yml          # Automated build workflow
+```
+
+## Configuration
+
+### package.json Build Options
+
+The `build` section in `package.json` configures electron-builder:
+
+```json
+{
+  "build": {
+    "appId": "com.stormbrowser.app",
+    "productName": "Storm Browser",
+    "mac": {
+      "target": [{"target": "dmg", "arch": ["x64", "arm64"]}]
     },
-  });
-
-  Menu.setApplicationMenu(null);
-
-  const ses = session.defaultSession;
-  registerAdBlocker(ses);
-  registerDownloadHandler(ses);
-
-  mainWindow.loadFile(path.join(__dirname, 'ui', 'index.html'));
+    "win": {
+      "target": [{"target": "nsis", "arch": ["x64"]}]
+    }
+  }
 }
+```
 
-app.whenReady().then(() => {
-  loadCachedBlocklist();
-  refreshRemoteBlocklist();
-  createWindow();
+## Technologies Used
 
-  autoUpdater.checkForUpdatesAndNotify().catch(() => {});
+- **Electron** - Desktop app framework
+- **React 18** - UI library
+- **TypeScript** - Type safety
+- **Tailwind CSS v4** - Styling
+- **Vite** - Build tool
+- **electron-builder** - Packaging and distribution
+- **Lucide React** - Icon library
+- **Motion** - Animation library
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-  });
-});
+## License
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
-});
+Apache-2.0
