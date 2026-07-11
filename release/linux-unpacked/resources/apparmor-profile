@@ -1,7 +1,7 @@
 abi <abi/4.0>,
 include <tunables/global>
 
-profile "storm-browser" "/opt/Storm Browser/storm-browser" flags=(unconfined) {
+profile "storm-browser" "/opt/StormX Browser/storm-browser" flags=(unconfined) {
   userns,
 
   # Site-specific additions and overrides. See local/README for details.

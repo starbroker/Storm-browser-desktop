@@ -13,7 +13,7 @@
     "win": {
       "target": [
         "nsis",
-        "msix"
+        "appx"
       ],
       "forceCodeSigning": false,
       "signAndEditExecutable": false
@@ -26,12 +26,11 @@
       "shortcutName": "StormX Browser",
       "uninstallDisplayName": "StormX Browser"
     },
-    "msix": {
+    "appx": {
       "identityName": "StormXBrowser",
       "publisher": "CN=StormXBrowser",
       "publisherDisplayName": "StormX Browser",
       "displayName": "StormX Browser",
-      "allowElevation": true,
       "languages": [
         "en-US"
       ]
@@ -64,7 +63,7 @@
     "electron:build:win": "vite build && electron-builder --win",
     "electron:build:linux": "vite build && electron-builder --linux",
     "build:win-exe": "vite build && electron-builder --win nsis",
-    "build:win-msix": "vite build && electron-builder --win msix",
+    "build:win-appx": "vite build && electron-builder --win appx",
     "build:mac": "vite build && electron-builder --mac dmg",
     "build:linux": "vite build && electron-builder --linux deb"
   },

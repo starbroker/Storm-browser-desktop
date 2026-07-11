@@ -32,7 +32,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install Dependencies
@@ -54,7 +54,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Windows MSIX
-        run: npm run build:win-msix
+        run: npm run build:win-appx
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -69,7 +69,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: stormx-browser-windows-msix
-          path: release/*.msix
+          path: |
+            release/*.appx
+            release/*.msix
           if-no-files-found: ignore
 
   build-macos:
@@ -83,7 +85,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install Dependencies
@@ -113,7 +115,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install Dependencies
