@@ -5,18 +5,37 @@
   "type": "module",
   "main": "main.cjs",
   "build": {
-    "appId": "com.stormbrowser.app",
+    "appId": "com.stormxbrowser.app",
     "productName": "StormX Browser",
     "directories": {
-      "output": "release"
+      "output": "release",
+      "buildResources": "assets"
     },
+    "files": [
+      "dist/**/*",
+      "main.cjs"
+    ],
     "win": {
       "target": [
-        "nsis",
-        "appx"
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        },
+        {
+          "target": "msix",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
       ],
       "forceCodeSigning": false,
-      "signAndEditExecutable": false
+      "signAndEditExecutable": false,
+      "certificateFile": null,
+      "certificatePassword": null
     },
     "nsis": {
       "oneClick": false,
@@ -24,34 +43,88 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "StormX Browser",
-      "uninstallDisplayName": "StormX Browser"
+      "uninstallDisplayName": "StormX Browser",
+      "installerIcon": "assets/installer-icon.ico",
+      "uninstallerIcon": "assets/uninstaller-icon.ico",
+      "installerHeader": "assets/installer-header.bmp",
+      "installerSidebar": "assets/installer-sidebar.bmp"
     },
-    "appx": {
+    "msix": {
       "identityName": "StormXBrowser",
       "publisher": "CN=StormXBrowser",
       "publisherDisplayName": "StormX Browser",
       "displayName": "StormX Browser",
       "languages": [
         "en-US"
-      ]
+      ],
+      "backgroundColor": "#1a1a2e"
     },
     "mac": {
       "target": [
-        "dmg"
+        "dmg",
+        "zip"
       ],
-      "category": "public.app-category.developer-tools"
+      "category": "public.app-category.productivity",
+      "icon": "assets/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "assets/entitlements.mac.plist",
+      "entitlementsInherit": "assets/entitlements.mac.plist",
+      "extendInfo": {
+        "NSPrincipalClass": "NSApplication"
+      }
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220,
+          "type": "file"
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "icon": "assets/icon.icns",
+      "title": "StormX Browser"
     },
     "linux": {
       "target": [
-        "AppImage",
-        "deb"
+        {
+          "target": "deb",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        },
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
       ],
-      "category": "Network"
+      "category": "Network;Utility",
+      "icon": "assets/icon.png"
     },
-    "files": [
-      "dist/**/*",
-      "main.cjs"
-    ]
+    "deb": {
+      "depends": [
+        "gconf2",
+        "gconf-service",
+        "libappindicator1",
+        "libnotify4",
+        "libxtst6",
+        "libnss3"
+      ],
+      "afterInstall": "./scripts/postinstall.sh",
+      "afterRemove": "./scripts/postremove.sh"
+    },
+    "appImage": {
+      "artifactName": "StormX-Browser-${version}.${ext}"
+    }
   },
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
@@ -63,9 +136,9 @@
     "electron:build:win": "vite build && electron-builder --win",
     "electron:build:linux": "vite build && electron-builder --linux",
     "build:win-exe": "vite build && electron-builder --win nsis",
-    "build:win-appx": "vite build && electron-builder --win appx",
+    "build:win-msix": "vite build && electron-builder --win msix",
     "build:mac": "vite build && electron-builder --mac dmg",
-    "build:linux": "vite build && electron-builder --linux deb"
+    "build:linux": "vite build && electron-builder --linux deb AppImage"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -103,6 +176,6 @@
     "name": "Himank",
     "email": "himankcpro@gmail.com"
   },
-  "description": "Storm Browser",
-  "homepage": "https://github.com/himank/storm-browser"
+  "description": "Storm Browser - ColorOS 16 Inspired Desktop Browser",
+  "homepage": "https://github.com/starbroker/Storm-browser-desktop"
 }
