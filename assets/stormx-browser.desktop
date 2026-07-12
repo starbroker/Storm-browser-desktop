@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=StormX Browser
+Comment=A modern desktop browser inspired by ColorOS 16
+Exec=/opt/stormx-browser/stormx-browser %U
+Icon=stormx-browser
+Terminal=false
+Categories=Network;Utility;
+MimeType=text/html;text/xml;application/xhtml+xml;application/x-mml+xml;
+StartupNotify=true
+StartupWMClass=StormX Browser
