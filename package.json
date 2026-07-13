@@ -35,7 +35,17 @@
       "forceCodeSigning": false,
       "signAndEditExecutable": false,
       "certificateFile": null,
-      "certificatePassword": null
+      "certificatePassword": null,
+      "msix": {
+        "identityName": "StormXBrowser",
+        "publisher": "CN=StormXBrowser",
+        "publisherDisplayName": "StormX Browser",
+        "displayName": "StormX Browser",
+        "languages": [
+          "en-US"
+        ],
+        "backgroundColor": "#1a1a2e"
+      }
     },
     "nsis": {
       "oneClick": false,
@@ -48,16 +58,6 @@
       "uninstallerIcon": "assets/uninstaller-icon.ico",
       "installerHeader": "assets/installer-header.bmp",
       "installerSidebar": "assets/installer-sidebar.bmp"
-    },
-    "msix": {
-      "identityName": "StormXBrowser",
-      "publisher": "CN=StormXBrowser",
-      "publisherDisplayName": "StormX Browser",
-      "displayName": "StormX Browser",
-      "languages": [
-        "en-US"
-      ],
-      "backgroundColor": "#1a1a2e"
     },
     "mac": {
       "target": [
@@ -136,7 +136,7 @@
     "electron:build:win": "vite build && electron-builder --win",
     "electron:build:linux": "vite build && electron-builder --linux",
     "build:win-exe": "vite build && electron-builder --win nsis",
-    "build:win-msix": "vite build && electron-builder --win msix",
+    "build:win-appx": "vite build && electron-builder --win msix",
     "build:mac": "vite build && electron-builder --mac dmg",
     "build:linux": "vite build && electron-builder --linux deb AppImage"
   },
