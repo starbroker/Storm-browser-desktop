@@ -9,9 +9,12 @@ function createWindow() {
     width: 1280,
     height: 800,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
-      webviewTag: true,
+      nodeIntegration: false,
+      contextIsolation: true,
+      enableRemoteModule: false,
+      preload: path.join(__dirname, 'preload.cjs'),
+      webviewTag: false,
+      sandbox: true,
     },
   });
 
@@ -22,6 +25,14 @@ function createWindow() {
   });
 
   mainWindow.loadURL(startUrl);
+
+  // Disable navigation to external sites
+  mainWindow.webContents.on('will-navigate', (event, navigationUrl) => {
+    const parsedUrl = new URL(navigationUrl);
+    if (parsedUrl.origin !== 'file://') {
+      event.preventDefault();
+    }
+  });
 
   mainWindow.on('closed', function () {
     mainWindow = null;
